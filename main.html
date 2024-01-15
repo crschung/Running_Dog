@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
+
+in vec4 vPosition;
+in vec3 vNormal;
+in vec4 vColor; 
+in vec2 vTexCoord;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 normalMatrix;
+uniform mat4 projectionMatrix;
+uniform vec4 lightPosition;
+uniform float shininess;
+
+out vec3 fPos; // vertex position in eye coords
+out vec3 fLpos; // light position in eye cords
+out vec3 fN; // vertex normal in eye coords
+
+out vec2 fTexCoord;
+void
+main()
+{
+    fPos = (modelViewMatrix * vPosition).xyz;
+
+    //transform normal in eye coordinates
+    fN = normalize( (normalMatrix*vec4(vNormal,0.0)).xyz);
+    // pass through light position
+    fLpos = lightPosition.xyz ;
+    // Transform vertex position in clip coordinates
+    gl_Position = projectionMatrix * modelViewMatrix * vPosition; 
+
+    fTexCoord = vTexCoord;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
+
+precision mediump float;
+
+uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+uniform float shininess;
+
+uniform sampler2D texture1;
+uniform int useTextures;
+
+in vec3 fPos ;
+in vec3 fLpos ;
+in vec3 fN ;
+in vec2 fTexCoord;
+layout (location = 0) out vec4 fragColor ;
+
+void
+main()
+{
+    vec3 L = normalize(fLpos - fPos) ;
+    vec3 V = normalize(-fPos) ; 
+    vec3 R = reflect(-L, fN) ;
+    vec3 H = normalize(L + V);
+    
+    float lightDotNormal = max( dot(L, fN), 0.0 );
+    vec4 diffuse = vec4(0.0, 0.0, 0.0, 1.0);
+    diffuse = diffuseProduct * lightDotNormal;
+
+    float reflectedDotViewShiny = pow( max(dot(fN, H), 0.0), shininess );
+    vec4 specular = vec4(0.0, 0.0, 0.0, 1.0);
+    specular = specularProduct * reflectedDotViewShiny;
+
+    if( dot(L, fN) < 0.0 ) {
+        specular = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+    vec4 color = ambientProduct + diffuse + specular;
+    color.a = 1.0 ;
+    fragColor = color ;
+    fragColor = texture( texture1 , fTexCoord );
+}
+</script>
+
+<script type="text/javascript" src="Common/webgl-utils.js"></script>
+<script type="text/javascript" src="Common/initShaders.js"></script>
+
+<script type="text/javascript" src="Common/MV.js"></script>
+<script type="text/javascript" src="objects.js"></script>
+<script type="text/javascript" src="main.js"></script>
+
+
+<body>
+<canvas id="gl-canvas" width="512" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+<br/>
+<br/>
+
+<div id="animToggleButton">
+    <input id="animToggleButton" type="button" value="Toggle Animation"
+    />
+    <audio id="audio" src="/assets/Burn-The-World-Waltz-.ogg"></audio>
+
+</div><br/>
+
+</div><br/>
+
+
+</body>
+</html>
