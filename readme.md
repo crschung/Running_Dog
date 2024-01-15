@@ -31,11 +31,13 @@ https://www.incompetech.com/music/royalty-free/index.html?isrc=USUAN2100009
 To run the animation:
 
 Run on a python server
+
 ```
 python -m http.server 8080
 ```
 
 Load Localhost on port 8080 on a web browser to view the animation
+
 ```
 localhost:8080
 ```
